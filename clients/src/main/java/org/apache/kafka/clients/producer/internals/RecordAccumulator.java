@@ -168,11 +168,13 @@ public final class RecordAccumulator {
             // check if we have an in-progress batch
             Deque<RecordBatch> dq = getOrCreateDeque(tp);
             synchronized (dq) {
-                if (closed)
+                if (closed) {
                     throw new IllegalStateException("Cannot send after the producer is closed.");
+                }
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, callback, dq);
-                if (appendResult != null)
+                if (appendResult != null) {
                     return appendResult;
+                }
             }
 
             // we don't have an in-progress record batch try to allocate a new batch
@@ -181,8 +183,9 @@ public final class RecordAccumulator {
             ByteBuffer buffer = free.allocate(size, maxTimeToBlock);
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
-                if (closed)
+                if (closed) {
                     throw new IllegalStateException("Cannot send after the producer is closed.");
+                }
 
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, callback, dq);
                 if (appendResult != null) {

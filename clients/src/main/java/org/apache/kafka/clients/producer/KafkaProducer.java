@@ -483,32 +483,38 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             // for other exceptions throw directly
         } catch (ApiException e) {
             log.debug("Exception occurred during message send:", e);
-            if (callback != null)
+            if (callback != null) {
                 callback.onCompletion(null, e);
+            }
             this.errors.record();
-            if (this.interceptors != null)
+            if (this.interceptors != null) {
                 this.interceptors.onSendError(record, tp, e);
+            }
             return new FutureFailure(e);
         } catch (InterruptedException e) {
             this.errors.record();
-            if (this.interceptors != null)
+            if (this.interceptors != null) {
                 this.interceptors.onSendError(record, tp, e);
+            }
             throw new InterruptException(e);
         } catch (BufferExhaustedException e) {
             this.errors.record();
             this.metrics.sensor("buffer-exhausted-records").record();
-            if (this.interceptors != null)
+            if (this.interceptors != null) {
                 this.interceptors.onSendError(record, tp, e);
+            }
             throw e;
         } catch (KafkaException e) {
             this.errors.record();
-            if (this.interceptors != null)
+            if (this.interceptors != null) {
                 this.interceptors.onSendError(record, tp, e);
+            }
             throw e;
         } catch (Exception e) {
             // we notify interceptor about all exceptions, since onSend is called before anything else in this method
-            if (this.interceptors != null)
+            if (this.interceptors != null) {
                 this.interceptors.onSendError(record, tp, e);
+            }
             throw e;
         }
     }
@@ -527,8 +533,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         Integer partitionsCount = cluster.partitionCountForTopic(topic);
         // Return cached metadata if we have it, and if the record's partition is either undefined
         // or within the known partition range
-        if (partitionsCount != null && (partition == null || partition < partitionsCount))
+        if (partitionsCount != null && (partition == null || partition < partitionsCount)) {
             return new ClusterAndWaitTime(cluster, 0);
+        }
 
         long begin = time.milliseconds();
         long remainingWaitMs = maxWaitMs;
@@ -574,16 +581,18 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * Validate that the record size isn't too large
      */
     private void ensureValidRecordSize(int size) {
-        if (size > this.maxRequestSize)
+        if (size > this.maxRequestSize) {
             throw new RecordTooLargeException("The message is " + size +
                                               " bytes when serialized which is larger than the maximum request size you have configured with the " +
                                               ProducerConfig.MAX_REQUEST_SIZE_CONFIG +
                                               " configuration.");
-        if (size > this.totalMemorySize)
+        }
+        if (size > this.totalMemorySize) {
             throw new RecordTooLargeException("The message is " + size +
                                               " bytes when serialized which is larger than the total memory buffer you have configured with the " +
                                               ProducerConfig.BUFFER_MEMORY_CONFIG +
                                               " configuration.");
+        }
     }
 
     /**
