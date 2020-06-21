@@ -147,14 +147,19 @@ public final class Metadata {
         if (maxWaitMs < 0) {
             throw new IllegalArgumentException("Max time to wait for metadata updates should not be < 0 milli seconds");
         }
+        // 当前时间
         long begin = System.currentTimeMillis();
+        //
         long remainingWaitMs = maxWaitMs;
+        // 是否小于小于等于上次的版本
         while (this.version <= lastVersion) {
-            if (remainingWaitMs != 0)
+            if (remainingWaitMs != 0) {
                 wait(remainingWaitMs);
+            }
             long elapsed = System.currentTimeMillis() - begin;
-            if (elapsed >= maxWaitMs)
+            if (elapsed >= maxWaitMs) {
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
+            }
             remainingWaitMs = maxWaitMs - elapsed;
         }
     }
@@ -166,11 +171,13 @@ public final class Metadata {
      * @param topics
      */
     public synchronized void setTopics(Collection<String> topics) {
-        if (!this.topics.keySet().containsAll(topics))
+        if (!this.topics.keySet().containsAll(topics)) {
             requestUpdate();
+        }
         this.topics.clear();
-        for (String topic : topics)
+        for (String topic : topics) {
             this.topics.put(topic, TOPIC_EXPIRY_NEEDS_UPDATE);
+        }
     }
 
     /**
@@ -206,17 +213,18 @@ public final class Metadata {
             for (Iterator<Map.Entry<String, Long>> it = topics.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Long> entry = it.next();
                 long expireMs = entry.getValue();
-                if (expireMs == TOPIC_EXPIRY_NEEDS_UPDATE)
+                if (expireMs == TOPIC_EXPIRY_NEEDS_UPDATE) {
                     entry.setValue(now + TOPIC_EXPIRY_MS);
-                else if (expireMs <= now) {
+                } else if (expireMs <= now) {
                     it.remove();
                     log.debug("Removing unused topic {} from the metadata list, expiryMs {} now {}", entry.getKey(), expireMs, now);
                 }
             }
         }
 
-        for (Listener listener: listeners)
+        for (Listener listener: listeners) {
             listener.onMetadataUpdate(cluster);
+        }
 
         String previousClusterId = cluster.clusterResource().clusterId();
 
@@ -232,8 +240,9 @@ public final class Metadata {
         // The bootstrap cluster is guaranteed not to have any useful information
         if (!cluster.isBootstrapConfigured()) {
             String clusterId = cluster.clusterResource().clusterId();
-            if (clusterId == null ? previousClusterId != null : !clusterId.equals(previousClusterId))
+            if (clusterId == null ? previousClusterId != null : !clusterId.equals(previousClusterId)) {
                 log.info("Cluster ID: {}", cluster.clusterResource().clusterId());
+            }
             clusterResourceListeners.onUpdate(cluster.clusterResource());
         }
 

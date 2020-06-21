@@ -233,6 +233,9 @@ public class Sender implements Runnable {
         // otherwise if some partition already has some data accumulated but not ready yet,
         // the select time will be the time difference between now and its linger expiry time;
         // otherwise the select time will be the time difference between now and the metadata expiry time;
+        /**
+         * 拉取元数据信息
+         */
         this.client.poll(pollTimeout, now);
     }
 
