@@ -37,6 +37,7 @@ public class DefaultPartitioner implements Partitioner {
 
     private final AtomicInteger counter = new AtomicInteger(new Random().nextInt());
 
+    @Override
     public void configure(Map<String, ?> configs) {}
 
     /**
@@ -49,9 +50,11 @@ public class DefaultPartitioner implements Partitioner {
      * @param valueBytes serialized value to partition on or null
      * @param cluster The current cluster metadata
      */
+    @Override
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
         List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
         int numPartitions = partitions.size();
+        // 不指定key的分区
         if (keyBytes == null) {
             int nextValue = counter.getAndIncrement();
             List<PartitionInfo> availablePartitions = cluster.availablePartitionsForTopic(topic);
@@ -62,12 +65,14 @@ public class DefaultPartitioner implements Partitioner {
                 // no partitions are available, give a non-available partition
                 return Utils.toPositive(nextValue) % numPartitions;
             }
+            // 指定key的分区
         } else {
             // hash the keyBytes to choose a partition
             return Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
         }
     }
 
+    @Override
     public void close() {}
 
 }

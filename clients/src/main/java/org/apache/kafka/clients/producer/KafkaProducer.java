@@ -463,6 +463,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         " specified in value.serializer");
             }
 
+            // 根据元数据信息目的是为了 获取分区信息
             int partition = partition(record, serializedKey, serializedValue, cluster);
             int serializedSize = Records.LOG_OVERHEAD + Record.recordSize(serializedKey, serializedValue);
             ensureValidRecordSize(serializedSize);

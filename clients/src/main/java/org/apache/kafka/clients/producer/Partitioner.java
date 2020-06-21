@@ -21,9 +21,8 @@ import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.Cluster;
 
 /**
- * Partitioner Interface
+ * 分区器的皆苦
  */
-
 public interface Partitioner extends Configurable {
 
     /**
@@ -36,11 +35,11 @@ public interface Partitioner extends Configurable {
      * @param valueBytes The serialized value to partition on or null
      * @param cluster The current cluster metadata
      */
-    public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster);
+    int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster);
 
     /**
      * This is called when partitioner is closed.
      */
-    public void close();
+    void close();
 
 }
