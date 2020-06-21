@@ -74,8 +74,9 @@ public final class RecordBatch {
                                                                    timestamp, checksum,
                                                                    key == null ? -1 : key.length,
                                                                    value == null ? -1 : value.length);
-            if (callback != null)
+            if (callback != null) {
                 thunks.add(new Thunk(callback, future));
+            }
             this.recordCount++;
             return future;
         }
