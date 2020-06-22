@@ -115,6 +115,7 @@ public final class RecordAccumulator {
     private void registerMetrics(Metrics metrics, String metricGrpName) {
         MetricName metricName = metrics.metricName("waiting-threads", metricGrpName, "The number of user threads blocked waiting for buffer memory to enqueue their records");
         Measurable waitingThreads = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.queued();
             }
@@ -123,6 +124,7 @@ public final class RecordAccumulator {
 
         metricName = metrics.metricName("buffer-total-bytes", metricGrpName, "The maximum amount of buffer memory the client can use (whether or not it is currently used).");
         Measurable totalBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.totalMemory();
             }
@@ -131,6 +133,7 @@ public final class RecordAccumulator {
 
         metricName = metrics.metricName("buffer-available-bytes", metricGrpName, "The total amount of buffer memory that is not being used (either unallocated or in the free list).");
         Measurable availableBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.availableMemory();
             }
@@ -166,6 +169,7 @@ public final class RecordAccumulator {
         appendsInProgress.incrementAndGet();
         try {
             // check if we have an in-progress batch
+            // 线程一 、二、三
             Deque<RecordBatch> dq = getOrCreateDeque(tp);
             synchronized (dq) {
                 if (closed) {
@@ -180,7 +184,9 @@ public final class RecordAccumulator {
             // we don't have an in-progress record batch try to allocate a new batch
             int size = Math.max(this.batchSize, Records.LOG_OVERHEAD + Record.recordSize(key, value));
             log.trace("Allocating a new {} byte message buffer for topic {} partition {}", size, tp.topic(), tp.partition());
+
             ByteBuffer buffer = free.allocate(size, maxTimeToBlock);
+
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
                 if (closed) {
@@ -214,10 +220,11 @@ public final class RecordAccumulator {
         RecordBatch last = deque.peekLast();
         if (last != null) {
             FutureRecordMetadata future = last.tryAppend(timestamp, key, value, callback, time.milliseconds());
-            if (future == null)
+            if (future == null) {
                 last.records.close();
-            else
+            } else {
                 return new RecordAppendResult(future, deque.size() > 1 || last.records.isFull(), false);
+            }
         }
         return null;
     }
@@ -348,8 +355,9 @@ public final class RecordAccumulator {
         for (Map.Entry<TopicPartition, Deque<RecordBatch>> entry : this.batches.entrySet()) {
             Deque<RecordBatch> deque = entry.getValue();
             synchronized (deque) {
-                if (!deque.isEmpty())
+                if (!deque.isEmpty()) {
                     return true;
+                }
             }
         }
         return false;
@@ -369,8 +377,9 @@ public final class RecordAccumulator {
                                                  Set<Node> nodes,
                                                  int maxSize,
                                                  long now) {
-        if (nodes.isEmpty())
+        if (nodes.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         Map<Integer, List<RecordBatch>> batches = new HashMap<>();
         for (Node node : nodes) {
@@ -425,14 +434,16 @@ public final class RecordAccumulator {
      */
     private Deque<RecordBatch> getOrCreateDeque(TopicPartition tp) {
         Deque<RecordBatch> d = this.batches.get(tp);
-        if (d != null)
+        if (d != null) {
             return d;
+        }
         d = new ArrayDeque<>();
         Deque<RecordBatch> previous = this.batches.putIfAbsent(tp, d);
-        if (previous == null)
+        if (previous == null) {
             return d;
-        else
+        } else {
             return previous;
+        }
     }
 
     /**
@@ -476,8 +487,9 @@ public final class RecordAccumulator {
      */
     public void awaitFlushCompletion() throws InterruptedException {
         try {
-            for (RecordBatch batch : this.incomplete.all())
+            for (RecordBatch batch : this.incomplete.all()) {
                 batch.produceFuture.await();
+            }
         } finally {
             this.flushesInProgress.decrementAndGet();
         }
@@ -582,8 +594,9 @@ public final class RecordAccumulator {
         public void remove(RecordBatch batch) {
             synchronized (incomplete) {
                 boolean removed = this.incomplete.remove(batch);
-                if (!removed)
+                if (!removed) {
                     throw new IllegalStateException("Remove from the incomplete set failed. This should be impossible.");
+                }
             }
         }
         

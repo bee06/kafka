@@ -77,13 +77,13 @@ public class Sender implements Runnable {
     /* the number of acknowledgements to request from the server */
     private final short acks;
 
-    /* the number of times to retry a failed request before giving up */
+    /** the number of times to retry a failed request before giving up */
     private final int retries;
 
-    /* the clock instance used for getting the time */
+    /** the clock instance used for getting the time */
     private final Time time;
 
-    /* true while the sender thread is still running */
+    /** true while the sender thread is still running */
     private volatile boolean running;
 
     /* true when the caller wants to ignore all unsent/inflight messages and force close.  */
@@ -126,6 +126,7 @@ public class Sender implements Runnable {
     /**
      * The main run loop for the sender thread
      */
+    @Override
     public void run() {
         log.debug("Starting Kafka producer I/O thread.");
 
@@ -226,8 +227,9 @@ public class Sender implements Runnable {
             log.trace("Created {} produce requests: {}", requests.size(), requests);
             pollTimeout = 0;
         }
-        for (ClientRequest request : requests)
+        for (ClientRequest request : requests) {
             client.send(request, now);
+        }
 
         // if some partitions are already ready to be sent, the select time would be 0;
         // otherwise if some partition already has some data accumulated but not ready yet,
